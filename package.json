@@ -1,0 +1,27 @@
+{
+  "name": "@metatoy/sorb-core",
+  "version": "0.1.0",
+  "description": "Shared Sorb contract: JSDoc typedefs for the resolved bindable token map and capture schemas, plus the canonical tier ordering. One home so the contract can't drift across the Sorb polyrepo.",
+  "license": "MIT",
+  "type": "module",
+  "keywords": [
+    "sorb",
+    "design-tokens",
+    "figma",
+    "tokens"
+  ],
+  "homepage": "https://github.com/metatoy/sorb-core#readme",
+  "bugs": "https://github.com/metatoy/sorb-core/issues",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/metatoy/sorb-core.git"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "main": "src/index.js",
+  "files": [
+    "src"
+  ],
+  "sideEffects": false
+}
