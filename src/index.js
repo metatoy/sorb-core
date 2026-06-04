@@ -1,4 +1,4 @@
-// @metatoy/sorb-core — the shared Sorb contract.
+// @sorb/core — the shared Sorb contract.
 //
 // One published home for the shapes that cross repo boundaries: the resolved
 // bindable token map (Style Dictionary's `sorb/resolved-map` output) and the

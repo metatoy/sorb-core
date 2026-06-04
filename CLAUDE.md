@@ -7,7 +7,7 @@ Part of the **Sorb** polyrepo under the **Metatoy** org (local base
 
 ## What this is
 
-`@metatoy/sorb-core` — the **shared contract**. JSDoc typedefs for the resolved
+`@sorb/core` — the **shared contract**. JSDoc typedefs for the resolved
 bindable token map (`ResolvedToken {id, cssVar, value, tier, type}`) and the
 capture schemas (`LayerNode`, `StoryIndex`), plus the canonical tier ordering
 (`TIERS` / `TIER_RANK`). Every other Sorb package depends on this so the contract
