@@ -1,6 +1,6 @@
 {
   "name": "@sorb/core",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Shared Sorb contract: JSDoc typedefs for the resolved bindable token map and capture schemas, plus the canonical tier ordering. One home so the contract can't drift across the Sorb polyrepo.",
   "license": "MIT",
   "type": "module",
