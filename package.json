@@ -1,7 +1,7 @@
 {
   "name": "@sorb/core",
   "version": "0.1.1",
-  "description": "Shared Sorb contract: JSDoc typedefs for the resolved bindable token map and capture schemas, plus the canonical tier ordering. One home so the contract can't drift across the Sorb polyrepo.",
+  "description": "Shared contract for Sorb, the design-token bridge for your running app — typedefs + tier ordering so the contract can't drift. (Core.)",
   "license": "MIT",
   "type": "module",
   "keywords": [
