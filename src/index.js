@@ -98,4 +98,23 @@ export const TIER_RANK = Object.freeze({ component: 0, semantic: 1, primitive: 2
  * @property {Object.<string, StoryEntry>} stories  storyId → entry.
  */
 
+/**
+ * Identifies a component variant by its dot-path prefix.
+ * e.g. "button.tertiary" covers all tokens whose id starts with "button.tertiary."
+ * @typedef {Object} VariantSpec
+ * @property {string} componentId  Top-level component key, e.g. "button".
+ * @property {string} variantId    Full dot-path of the variant, e.g. "button.tertiary".
+ * @property {string} [fromVariant] Dot-path of the source variant to clone from (addVariant only).
+ * @property {string} [replacedBy]  Dot-path that replaces this variant (deprecateVariant only).
+ */
+
+/**
+ * The result of a lifecycle action — what changed.
+ * @typedef {Object} VariantChangeset
+ * @property {'add'|'deprecate'} action
+ * @property {string} variantId    The variant that was added or deprecated.
+ * @property {string[]} tokenIds   All token ids affected (added or deprecated).
+ * @property {string} newVersion   The component set's new $version after the change.
+ */
+
 export {}
