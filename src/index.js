@@ -117,4 +117,160 @@ export const TIER_RANK = Object.freeze({ component: 0, semantic: 1, primitive: 2
  * @property {string} newVersion   The component set's new $version after the change.
  */
 
+// ─── Connector contract (v1: additive) ─────────────────────────────────────────
+//
+// Three pluggable axes — SOURCE (where tokens + geometry come IN), CODE-SOURCE
+// (where the running app / codebase lives), and TARGET (how tokens bind into the
+// app) — plus a runtime registry that dispatches by `id`. Core only defines the
+// contract + registry + default ids; the default implementations are registered
+// by sorb-seed / sorb-juice / sorb-leaf in later phases. See
+// spec/sorb/connectors-architecture.md. `config` everywhere below is the app's
+// `sorb.config.json`-shaped object.
+
+/**
+ * A design unit to capture — one addressable thing a SourceConnector can turn
+ * into geometry (today's Storybook "story entry" is one). Opaque-ish: only `id`
+ * is guaranteed; connectors carry whatever extra metadata they need.
+ * @typedef {Object} DesignUnit
+ * @property {string} id     Stable unit id (e.g. a Storybook story id).
+ * @property {string} [name] Human-readable label.
+ */
+
+/**
+ * SOURCE axis — where design tokens + geometry come IN. A real source pulls BOTH
+ * tokens and geometry from the tool (founder decision 2026-08-28).
+ * @typedef {Object} SourceConnector
+ * @property {string} id  Registry key (default `'storybook-dom'`).
+ * @property {(config: Object) => Promise<DesignUnit[]>} listUnits
+ *   Discover the design units to capture.
+ * @property {(unit: DesignUnit, config: Object) => Promise<LayerNode>} captureGeometry
+ *   Capture one unit as a raw (un-annotated) LayerNode tree.
+ * @property {(config: Object) => Promise<TokenSet>} readTokens
+ *   Read the DTCG token set for this source.
+ */
+
+/**
+ * CODE-SOURCE axis — where the running app / codebase lives.
+ * @typedef {Object} CodeSourceConnector
+ * @property {string} id  Registry key (default `'local'`).
+ * @property {(config: Object) => Promise<string|null>} resolveAppUrl
+ *   Resolve the running app's URL (today = `appUrl` / `localhost:5173`).
+ * @property {(config: Object) => string} resolveProjectRoot
+ *   Resolve the project root dir (today = `process.cwd()`).
+ * @property {(config: Object) => Promise<void>} [provision]
+ *   Optional: clone/build a repo → hosted preview (future code sources).
+ */
+
+/**
+ * TARGET axis — how tokens bind into the running app (the component-compat seam).
+ * @typedef {Object} TargetAdapter
+ * @property {string} id  Registry key (default `'react-bootstrap'`).
+ * @property {string} emitFormat  A Style-Dictionary format id (e.g. `SORB_TOKENSET`).
+ * @property {string[]} expectPrefixes  Vocab-guard namespace(s), e.g. `['bs-']`.
+ * @property {(tokens: TokenSet, config: Object) => void} [inject]
+ *   Optional: bind tokens into non-React hosts (the `sorbInit` seam).
+ */
+
+/** Default SOURCE connector id (registered by sorb-seed). @type {string} */
+export const DEFAULT_SOURCE_ID = 'storybook-dom'
+
+/** Default CODE-SOURCE connector id (registered by sorb-juice). @type {string} */
+export const DEFAULT_CODE_SOURCE_ID = 'local'
+
+/** Default TARGET adapter id (registered by sorb-leaf). @type {string} */
+export const DEFAULT_TARGET_ID = 'react-bootstrap'
+
+/**
+ * The runtime connector registry — id → impl per axis. The Maps are mutable by
+ * design so consumer packages register their defaults into them; the container
+ * itself is frozen so the axis set can't drift.
+ * @typedef {Object} ConnectorRegistry
+ * @property {Map<string, SourceConnector>} source
+ * @property {Map<string, CodeSourceConnector>} codeSource
+ * @property {Map<string, TargetAdapter>} target
+ * @type {ConnectorRegistry}
+ */
+export const connectors = Object.freeze({
+  source: new Map(),
+  codeSource: new Map(),
+  target: new Map(),
+})
+
+/**
+ * Register a SOURCE connector by its `id`.
+ * @param {SourceConnector} conn
+ * @returns {SourceConnector} the registered connector.
+ */
+export function registerSource(conn) {
+  connectors.source.set(conn.id, conn)
+  return conn
+}
+
+/**
+ * Register a CODE-SOURCE connector by its `id`.
+ * @param {CodeSourceConnector} conn
+ * @returns {CodeSourceConnector} the registered connector.
+ */
+export function registerCodeSource(conn) {
+  connectors.codeSource.set(conn.id, conn)
+  return conn
+}
+
+/**
+ * Register a TARGET adapter by its `id`.
+ * @param {TargetAdapter} adapter
+ * @returns {TargetAdapter} the registered adapter.
+ */
+export function registerTarget(adapter) {
+  connectors.target.set(adapter.id, adapter)
+  return adapter
+}
+
+/**
+ * Look up a registered SOURCE connector; throws on unknown id.
+ * @param {string} id
+ * @returns {SourceConnector}
+ */
+export function getSource(id) {
+  const conn = connectors.source.get(id)
+  if (!conn) throw new Error(`Unknown source connector: ${JSON.stringify(id)}`)
+  return conn
+}
+
+/**
+ * Look up a registered CODE-SOURCE connector; throws on unknown id.
+ * @param {string} id
+ * @returns {CodeSourceConnector}
+ */
+export function getCodeSource(id) {
+  const conn = connectors.codeSource.get(id)
+  if (!conn) throw new Error(`Unknown codeSource connector: ${JSON.stringify(id)}`)
+  return conn
+}
+
+/**
+ * Look up a registered TARGET adapter; throws on unknown id.
+ * @param {string} id
+ * @returns {TargetAdapter}
+ */
+export function getTarget(id) {
+  const adapter = connectors.target.get(id)
+  if (!adapter) throw new Error(`Unknown target adapter: ${JSON.stringify(id)}`)
+  return adapter
+}
+
+/**
+ * Resolve the three connector ids from a config, falling back to the defaults
+ * when a key is absent (back-compat = today's behavior).
+ * @param {{ source?: string, codeSource?: string, target?: string }} [config]
+ * @returns {{ source: string, codeSource: string, target: string }}
+ */
+export function resolveConnectorIds(config = {}) {
+  return {
+    source: config.source || DEFAULT_SOURCE_ID,
+    codeSource: config.codeSource || DEFAULT_CODE_SOURCE_ID,
+    target: config.target || DEFAULT_TARGET_ID,
+  }
+}
+
 export {}
