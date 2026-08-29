@@ -169,6 +169,32 @@ export const TIER_RANK = Object.freeze({ component: 0, semantic: 1, primitive: 2
  * @property {string[]} expectPrefixes  Vocab-guard namespace(s), e.g. `['bs-']`.
  * @property {(tokens: TokenSet, config: Object) => void} [inject]
  *   Optional: bind tokens into non-React hosts (the `sorbInit` seam).
+ * @property {DarkModeConvention} [darkMode]
+ *   Optional: this target's dark-mode convention (real-dark-mode spec D1).
+ *   Undefined ⇒ single-mode (no dark) — the target has no notion of a dark
+ *   variant and mode-aware emit/inject should fall back to flat `:root` output.
+ */
+
+/**
+ * How a TargetAdapter's host framework expresses light/dark mode. v1 only
+ * ships `'attribute'` (Bootstrap 5.3's `[data-bs-theme]`); `'class'`
+ * (Tailwind's `.dark`) and `'media'` (OS-only, no manual override) are named
+ * here for forward-compat but not yet implemented by any shipped adapter —
+ * see real-dark-mode-implementation spec §3 "Deferred to phase 2".
+ * @typedef {Object} DarkModeConvention
+ * @property {'attribute'|'class'|'media'} strategy
+ *   How the manual override is expressed. `'attribute'` sets/reads a DOM
+ *   attribute (e.g. `data-bs-theme`); `'class'` toggles a class on
+ *   `documentElement`; `'media'` means OS-only, no manual override.
+ * @property {string} [attribute]
+ *   The attribute name for `strategy: 'attribute'` (e.g. `'data-bs-theme'`).
+ * @property {string} darkSelector
+ *   The CSS selector matching the dark-mode override (e.g.
+ *   `'[data-bs-theme="dark"]'`).
+ * @property {string} [lightSelector]
+ *   The CSS selector matching an explicit light-mode override (e.g.
+ *   `'[data-bs-theme="light"]'`) — lets a manual "light" choice beat an OS
+ *   `prefers-color-scheme: dark` setting.
  */
 
 /** Default SOURCE connector id (registered by sorb-seed). @type {string} */

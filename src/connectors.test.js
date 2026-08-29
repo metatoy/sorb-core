@@ -59,6 +59,36 @@ test('target adapter registers and round-trips via getTarget', () => {
   assert.equal(getTarget('dummy-target'), dummy)
 })
 
+test('target adapter darkMode field is optional — undefined ⇒ single-mode', () => {
+  const dummy = {
+    id: 'dummy-target-no-dark',
+    emitFormat: 'SORB_TOKENSET',
+    expectPrefixes: ['bs-'],
+  }
+  registerTarget(dummy)
+  assert.equal(getTarget('dummy-target-no-dark').darkMode, undefined)
+})
+
+test('target adapter round-trips a darkMode convention (attribute strategy)', () => {
+  const dummy = {
+    id: 'dummy-target-dark',
+    emitFormat: 'SORB_TOKENSET',
+    expectPrefixes: ['bs-'],
+    darkMode: {
+      strategy: 'attribute',
+      attribute: 'data-bs-theme',
+      darkSelector: '[data-bs-theme="dark"]',
+      lightSelector: '[data-bs-theme="light"]',
+    },
+  }
+  registerTarget(dummy)
+  const got = getTarget('dummy-target-dark')
+  assert.equal(got.darkMode.strategy, 'attribute')
+  assert.equal(got.darkMode.attribute, 'data-bs-theme')
+  assert.equal(got.darkMode.darkSelector, '[data-bs-theme="dark"]')
+  assert.equal(got.darkMode.lightSelector, '[data-bs-theme="light"]')
+})
+
 test('get* throws a clear error on unknown id', () => {
   assert.throws(() => getSource('nope'), /Unknown source connector: "nope"/)
   assert.throws(() => getCodeSource('nope'), /Unknown codeSource connector: "nope"/)
