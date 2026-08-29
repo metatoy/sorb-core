@@ -1,6 +1,6 @@
 {
   "name": "@sorb/core",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "Shared contract for Sorb, the design-token bridge for your running app — typedefs + tier ordering so the contract can't drift. (Core.)",
   "license": "MIT",
   "type": "module",
