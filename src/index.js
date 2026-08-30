@@ -197,6 +197,76 @@ export const TIER_RANK = Object.freeze({ component: 0, semantic: 1, primitive: 2
  *   `prefers-color-scheme: dark` setting.
  */
 
+/**
+ * SEMANTIC-ROLE CONTRACT (framework-targets-productization, T0).
+ *
+ * The canonical set of role ids a token kit MUST expose for the framework
+ * TargetAdapter emit formats (`sorb/mantine-vars`, `sorb/mui-vars`,
+ * `sorb/mat-sys-vars`, `sorb/shadcn-theme`, `sorb/primevue-preset`) to emit
+ * correctly. Each format maps its framework's own vars (`--mantine-*`, `--mui-*`,
+ * `--mat-sys-*`, shadcn vars, PrimeVue preset roots) ONTO these role ids.
+ *
+ * These are DTCG dot-path ids (→ CSS var `--<kebab>` → preview-payload key
+ * `<kebab>`). The Janes Jeans kit (`@metatoy/janes-jeans`) is the reference
+ * implementation. A kit using different names supplies `options.roleMap`
+ * (role-id → its-own-token-id) to a format rather than forking it.
+ *
+ * SEMVER: adding a role id here is a MINOR bump; renaming or removing one is a
+ * MAJOR bump for @sorb/core AND @sorb/seed — every format consumer depends on
+ * this set. Scope = the UNION of the target maps' role columns, not a kit's full
+ * token tree; anything beyond this list is kit-private.
+ *
+ * @typedef {Object} SemanticRoles
+ * @property {string[]} color   surface/ink/brand/accent/danger/success/border/focus roles.
+ * @property {string[]} radius  control/card/pill.
+ * @property {string[]} shadow  raised/overlay.
+ * @property {string[]} typography  display/heading/body/caption × fontSize/Weight/lineHeight.
+ */
+
+/**
+ * The canonical role-id list (T0 reference = the JJ kit's semantic tier).
+ * @type {Readonly<{color: string[], radius: string[], shadow: string[], typography: string[]}>}
+ */
+export const DEFAULT_ROLE_IDS = Object.freeze({
+  color: Object.freeze([
+    'color.surface', 'color.surface-raised', 'color.surface-sunken',
+    'color.ink', 'color.ink-muted', 'color.ink-on-brand',
+    'color.brand', 'color.brand-hover', 'color.brand-contrast',
+    'color.accent', 'color.accent-hover', 'color.accent-contrast',
+    'color.danger', 'color.danger-hover', 'color.success', 'color.success-hover',
+    'color.focus-ring', 'color.border', 'color.border-subtle', 'color.border-strong',
+  ]),
+  radius: Object.freeze(['radius.control', 'radius.card', 'radius.pill']),
+  shadow: Object.freeze(['shadow.raised', 'shadow.overlay']),
+  typography: Object.freeze([
+    'typography.display.fontSize', 'typography.display.fontWeight', 'typography.display.lineHeight',
+    'typography.heading.fontSize', 'typography.heading.fontWeight', 'typography.heading.lineHeight',
+    'typography.body.fontSize', 'typography.body.fontWeight', 'typography.body.lineHeight',
+    'typography.caption.fontSize', 'typography.caption.fontWeight', 'typography.caption.lineHeight',
+  ]),
+})
+
+/**
+ * Flat list of every canonical role id (all tiers), for iteration/validation.
+ * @type {readonly string[]}
+ */
+export const ALL_ROLE_IDS = Object.freeze([
+  ...DEFAULT_ROLE_IDS.color, ...DEFAULT_ROLE_IDS.radius,
+  ...DEFAULT_ROLE_IDS.shadow, ...DEFAULT_ROLE_IDS.typography,
+])
+
+/**
+ * Resolve a role id to the kit's actual token id via an optional override map.
+ * A format calls `resolveRole('color.brand', options.roleMap)` → the kit's token
+ * id (identity when the kit uses canonical ids, i.e. the JJ reference).
+ * @param {string} roleId  A canonical role id from {@link ALL_ROLE_IDS}.
+ * @param {Record<string,string>} [roleMap]  role-id → kit-token-id overrides.
+ * @returns {string} the kit token id to reference (`var(--<kebab>)`).
+ */
+export function resolveRole(roleId, roleMap) {
+  return (roleMap && roleMap[roleId]) || roleId
+}
+
 /** Default SOURCE connector id (registered by sorb-seed). @type {string} */
 export const DEFAULT_SOURCE_ID = 'storybook-dom'
 
@@ -243,11 +313,28 @@ export function registerCodeSource(conn) {
 }
 
 /**
- * Register a TARGET adapter by its `id`.
+ * Register a TARGET adapter by its `id`. Minimal shape validation (T0b) — with
+ * seven+ adapters registering into one Map, a typo'd `id` or missing
+ * `emitFormat` would fail silently at query time; catch it at register time.
+ * Throws on a malformed adapter; `console.warn`s (does not throw) on a
+ * duplicate-id overwrite so a legitimate re-register in tests/HMR still works.
  * @param {TargetAdapter} adapter
  * @returns {TargetAdapter} the registered adapter.
  */
 export function registerTarget(adapter) {
+  if (!adapter || typeof adapter.id !== 'string' || !adapter.id) {
+    throw new Error('registerTarget: adapter.id must be a non-empty string')
+  }
+  if (typeof adapter.emitFormat !== 'string' || !adapter.emitFormat) {
+    throw new Error(`registerTarget(${JSON.stringify(adapter.id)}): emitFormat must be a non-empty string`)
+  }
+  if (!Array.isArray(adapter.expectPrefixes)) {
+    throw new Error(`registerTarget(${JSON.stringify(adapter.id)}): expectPrefixes must be an array`)
+  }
+  if (connectors.target.has(adapter.id)) {
+    // eslint-disable-next-line no-console
+    console.warn(`registerTarget: overwriting existing target adapter ${JSON.stringify(adapter.id)}`)
+  }
   connectors.target.set(adapter.id, adapter)
   return adapter
 }
